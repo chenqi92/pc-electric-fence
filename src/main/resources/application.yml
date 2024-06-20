@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: pc-electric-fence
+server:
+  port: 6767
