@@ -1,5 +1,7 @@
 spring:
   application:
-    name: pc-electric-fence
+    name: @artifactId@
+  profiles:
+    active: dev
 server:
   port: 6767

@@ -1,8 +1,10 @@
 package com.lyc.pcelectricfence;
 
+import cn.allbs.influx.annotation.EnableAllbsInflux;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@EnableAllbsInflux
 @SpringBootApplication
 public class PcElectricFenceApplication {
 
