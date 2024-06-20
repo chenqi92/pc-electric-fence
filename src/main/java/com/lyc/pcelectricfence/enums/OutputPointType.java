@@ -8,7 +8,7 @@ package com.lyc.pcelectricfence.enums;
  */
 public enum OutputPointType {
 
-    OUTPUT(0, "输出点"),
+    OUTPUT(0, "输出"),
     LIGHT(1, "灯"),
     LED(2, "LED");
 

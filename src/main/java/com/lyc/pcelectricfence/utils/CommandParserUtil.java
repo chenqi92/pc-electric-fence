@@ -1,7 +1,12 @@
 package com.lyc.pcelectricfence.utils;
 
 import com.lyc.pcelectricfence.enums.*;
+import lombok.extern.slf4j.Slf4j;
 
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,132 +16,194 @@ import java.util.Map;
  * @author ChenQi
  * @date 2024/6/20
  */
+@Slf4j
 public class CommandParserUtil {
 
-    public static String parseControlCommand(String command) {
+    /**
+     * 解析主机控制指令
+     * C 主机编号 设备类型 防区编号 控制类型 密码
+     * C 6130-1-128 0 0 123456    表示 控制6130号主机的128号键盘(即主键盘)撤防
+     * C 6130-1-128 0 1 123456    表示 控制6130号主机的128号键盘(即主键盘)布防
+     * C 6130-0-1 0 1 123456      表示 控制6130号主机的1号设备布防
+     * C 6130-0-1 1 1 123456      表示 控制6130号主机的1号设备防区1布防
+     * C 6130-0-1 0 0 123456      表示 控制6130号主机的1号设备撤防
+     * C 6130-0-1 1 0 123456      表示 控制6130号主机的1号设备防区1撤防
+     *
+     * @param command 指令
+     * @return 解析结果
+     */
+    public static Map<String, Object> parseHostControlCommand(String command) {
+        Map<String, Object> map = new HashMap<>();
         String[] parts = command.split(" ");
         if (parts.length < 5) {
-            return "无效的指令格式";
+            log.error("Invalid command format: {}", command);
+            return null;
         }
-
-        String hostNumber = parts[0];
-        String zoneNumber = parts[1];
-        ControlType controlType = ControlType.values()[Integer.parseInt(parts[3])];
+        map.put("host", parts[1]);
+        // 主机编号
+        String hostNumber = parts[1].split("-")[0];
+        map.put("hostNumber", hostNumber);
+        // 设备编号
+        String deviceNumber = parts[1].split("-")[2];
+        map.put("deviceNumber", deviceNumber);
+        // 设备类型
+        int deviceType = Integer.parseInt(parts[2]);
+        map.put("deviceType", deviceType);
+        String deviceTypeName = deviceType == 0 ? "设备" : String.format("设备防区%d", deviceType);
+        map.put("deviceTypeName", deviceTypeName);
+        // 控制类型
+        int controlAction = Integer.parseInt(parts[3]);
+        map.put("controlAction", controlAction);
+        String controlActionTrans = ControlType.values()[controlAction].getDescription();
+        map.put("controlActionTrans", controlActionTrans);
+        // 密码
         String password = parts[4];
+        map.put("password", password);
 
-        String deviceTypeDescription = getDeviceTypeDescription(zoneNumber);
-        String controlTypeDescription = controlType.getDescription();
-
-        return String.format("控制%s号主机的%s%s", hostNumber, deviceTypeDescription, controlTypeDescription);
+        String event = String.format("控制%s号主机的%s号%s%s", hostNumber, deviceNumber, deviceTypeName, controlActionTrans);
+        log.info("Host control event: {}", event);
+        map.put("event", event);
+        return map;
     }
 
-    public static String parseOutputControlCommand(String command) {
+    /**
+     * 解析控制指令
+     * O 主机编号 输出点类型 输出点号 控制类型 控制时间
+     * O 6130-0-1 0 1 1 10    表示 控制6130号主机的1号设备的1号输出闭合10秒
+     * O 6130-0-1 0 1 0 0      表示 控制6130号主机的1号设备的1号输出断开
+     *
+     * @param command 指令
+     * @return 解析结果
+     */
+    public static Map<String, Object> parseOutputControlCommand(String command) {
+        Map<String, Object> map = new HashMap<>();
         String[] parts = command.split(" ");
         if (parts.length < 6) {
-            return "无效的指令格式";
+            log.error("Invalid command format: {}", command);
+            return null;
         }
-
-        String hostNumber = parts[0];
-        String zoneNumber = parts[1];
-        OutputPointType outputPointType = OutputPointType.values()[Integer.parseInt(parts[2])];
-        int outputPointNumber = Integer.parseInt(parts[3]);
-        OutputControlType outputControlType = OutputControlType.values()[Integer.parseInt(parts[4])];
+        map.put("host", parts[1]);
+        // 主机编号
+        String hostNumber = parts[1].split("-")[0];
+        map.put("hostNumber", Integer.parseInt(hostNumber));
+        // 设备编号
+        String deviceNumber = parts[1].split("-")[2];
+        map.put("deviceNumber", Integer.parseInt(deviceNumber));
+        // 输出点类型
+        String zoneType = parts[2];
+        map.put("zoneType", zoneType);
+        // 输出点类型解析
+        String zoneTypeName = OutputPointType.values()[Integer.parseInt(zoneType)].getDescription();
+        map.put("zoneTypeName", zoneTypeName);
+        // 输出点号
+        int zoneNumber = Integer.parseInt(parts[3]);
+        map.put("zoneNumber", zoneNumber);
+        // 控制类型
+        int controlAction = Integer.parseInt(parts[4]);
+        map.put("controlAction", controlAction);
+        String controlActionTrans = OutputControlType.values()[controlAction].getDescription();
+        map.put("controlActionTrans", controlActionTrans);
+        // 控制时间
         int controlTime = Integer.parseInt(parts[5]);
-
-        String deviceTypeDescription = getDeviceTypeDescription(zoneNumber);
-        String outputPointTypeDescription = outputPointType.getDescription();
-        String outputControlTypeDescription = outputControlType.getDescription();
-
-        return String.format("控制%s号主机的%s的%s%d号输出点%s%d秒", hostNumber, deviceTypeDescription, outputPointTypeDescription, outputPointNumber, outputControlTypeDescription, controlTime);
+        map.put("controlTime", controlTime);
+        String controlTrans = OutputControlType.OFF.getCode() == controlAction ? "" : controlTime + "秒";
+        String event = String.format("控制%s号主机的%s号设备的%s号%s%s%s", hostNumber, deviceNumber, zoneNumber, zoneTypeName,
+                controlActionTrans, controlTrans);
+        log.info("Control event tans: {}", event);
+        map.put("event", event);
+        return map;
     }
 
-    public static String parseEventUploadCommand(String command) {
+    /**
+     * 解析事件上传指令
+     * E 主机编号 防区编号 事件类型 事件值
+     * E 6130-0-1 4 2 0 11-7-13-2 表示6130主机1号模块4防区在11月7号13点2分
+     * E 0001 1 36 50    表示1号主机的1号围栏 电压为5.0KV
+     *
+     * @param command 指令
+     * @return 解析结果
+     */
+    public static Map<String, Object> parseEventUploadCommand(String command) {
+        Map<String, Object> map = new HashMap<>();
         String[] parts = command.split(" ");
-        if (parts.length < 7) {
-            return "无效的指令格式";
-        }
+        map.put("host", parts[1]);
+        if (parts.length == 5) {
+            // E 0001 1 36 50
+            int hostNumber = Integer.parseInt(parts[1]);
+            map.put("hostNumber", hostNumber);
 
-        String hostNumber = parts[0];
-        String zoneNumber = parts[1];
-        EventType eventType = EventType.values()[Integer.parseInt(parts[2])];
-        String subsystemNumber = parts[3];
-        String eventTime = parts[4] + "-" + parts[5] + "-" + parts[6] + "-" + parts[7];
+            int zoneNumber = Integer.parseInt(parts[2]);
+            map.put("zoneNumber", zoneNumber);
 
-        String eventTypeDescription = eventType.getDescription();
+            int eventType = Integer.parseInt(parts[3]);
+            map.put("eventType", eventType);
 
-        return String.format("主机编号: %s, 防区编号: %s, 事件类型: %s, 子系统号: %s, 事件时间: %s",
-                hostNumber, zoneNumber, eventTypeDescription, subsystemNumber, eventTime);
-    }
+            String eventTypeName = EventType.values()[eventType].getDescription();
+            map.put("eventTypeName", eventTypeName);
 
-    public static Map<String, String> parseCommandToMap(String command) {
-        String[] parts = command.split(" ");
-        Map<String, String> commandMap = new HashMap<>();
-
-        switch (parts[0]) {
-            case "A":
-                commandMap.put("类型", "应答");
-                commandMap.put("结果", ResponseType.values()[Integer.parseInt(parts[1])].getDescription());
-                break;
-            case "H":
-                commandMap.put("类型", "心跳");
-                commandMap.put("设备编号", parts[1]);
-                commandMap.put("通讯方式", CommunicationMode.values()[Integer.parseInt(parts[2])].getDescription());
-                commandMap.put("设备类型", DeviceType.values()[Integer.parseInt(parts[3])].getDescription());
-                break;
-            case "E":
-                commandMap.put("类型", "事件上传");
-                commandMap.put("主机编号", parts[1]);
-                commandMap.put("防区编号", parts[2]);
-                commandMap.put("事件类型", EventType.values()[Integer.parseInt(parts[3])].getDescription());
-                commandMap.put("子系统号", parts[4]);
-                commandMap.put("时间", parts[5] + "-" + parts[6] + "-" + parts[7] + "-" + parts[8]);
-                break;
-            case "C":
-                commandMap.put("类型", "主机控制");
-                commandMap.put("主机编号", parts[1]);
-                commandMap.put("防区编号", parts[2]);
-                commandMap.put("控制类型", ControlType.values()[Integer.parseInt(parts[3])].getDescription());
-                commandMap.put("密码", parts[4]);
-                break;
-            case "O":
-                commandMap.put("类型", "输出点控制");
-                commandMap.put("主机编号", parts[1]);
-                commandMap.put("输出点类型", OutputPointType.values()[Integer.parseInt(parts[2])].getDescription());
-                commandMap.put("输出点号", parts[3]);
-                commandMap.put("控制类型", OutputControlType.values()[Integer.parseInt(parts[4])].getDescription());
-                commandMap.put("控制时间", parts[5]);
-                break;
-            default:
-                commandMap.put("类型", "未知");
-                break;
-        }
-
-        return commandMap;
-    }
-
-    private static String getDeviceTypeDescription(String zoneNumber) {
-        String[] zoneParts = zoneNumber.split("-");
-        if (zoneParts.length < 2) {
-            return "未知设备";
-        }
-
-        int commNumber = Integer.parseInt(zoneParts[1]);
-        int terminalNumber = Integer.parseInt(zoneParts[2]);
-
-        if (commNumber == 0) {
-            if (terminalNumber == 0) {
-                return "主机主板防区";
-            } else if (terminalNumber <= 64) {
-                return String.format("%d号设备", terminalNumber);
+            DecimalFormat df = new DecimalFormat("#.0"); // 保留一位小数
+            float value = Float.parseFloat(parts[4]);
+            map.put("value", df.format(value));
+            String valueUnit = value + "";
+            if (EventType.FENCE_VOLTAGE.getCode() == eventType) {
+                map.put("value", df.format(value / 10));
+                valueUnit = df.format(value / 10) + "KV";
             }
-        } else if (commNumber == 1) {
-            if (terminalNumber == 128) {
-                return "128号键盘(即主键盘)";
-            } else if (terminalNumber > 128 && terminalNumber <= 160) {
-                return String.format("%d号分键盘", terminalNumber - 128);
+
+            String event = String.format("%s号主机的%s号%s为%s", hostNumber, zoneNumber, eventTypeName, valueUnit);
+            log.info("Event upload: {}", event);
+            map.put("event", event);
+
+        } else if (parts.length == 6) {
+            // E 6130-0-1 4 2 0 11-7-13-2
+            String[] hostParts = parts[1].split("-");
+            String hostNumber = hostParts[0];
+            map.put("hostNumber", Integer.parseInt(hostNumber));
+            // 通讯机编号
+            int communicationNumber = Integer.parseInt(hostParts[1]);
+            map.put("communicationNumber", communicationNumber);
+            // 设备编号
+            int deviceNumber = Integer.parseInt(hostParts[2]);
+            map.put("deviceNumber", deviceNumber);
+            DeviceEnum deviceEnum = DeviceEnum.fromCommAndTerminal(communicationNumber, deviceNumber);
+            map.put("zoneType", communicationNumber + "-" + deviceNumber);
+            map.put("zoneTypeName", deviceEnum.getDescription());
+
+            // 防区
+            int zoneNumber = Integer.parseInt(parts[2]);
+            map.put("zoneNumber", zoneNumber);
+            String zoneTypeName = zoneNumber > 0 ? zoneNumber + "防区" : "";
+
+            int eventType = Integer.parseInt(parts[3]);
+            map.put("eventType", eventType);
+
+            String eventTypeName = EventType.values()[eventType].getDescription();
+            map.put("eventTypeName", eventTypeName);
+
+            // 子系统号固定为0
+            String subsystemNumber = parts[4];
+            map.put("subsystemNumber", Integer.parseInt(subsystemNumber));
+
+            // 当前年份
+            int year = LocalDate.now().getYear();
+            String[] timeParts = parts[5].split("-");
+            if (timeParts.length != 4) {
+                log.error("Invalid time format: {}", command);
+                return null;
             }
+            LocalDateTime eventTime = LocalDateTime.of(year, Integer.parseInt(timeParts[0]), Integer.parseInt(timeParts[1]),
+                    Integer.parseInt(timeParts[2]), Integer.parseInt(timeParts[3]));
+            map.put("eventTime", eventTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+            String event = String.format("%s号主机的%s号%s%s在%s发生%s", hostNumber, deviceNumber, deviceEnum.getOutput(), zoneTypeName, eventTime.format(DateTimeFormatter.ofPattern("MM月dd日HH时mm分")), eventTypeName);
+            log.info("Event upload: {}", event);
+            map.put("event", event);
+
+        } else {
+            log.error("Invalid command format: {}", command);
+            return null;
         }
 
-        return "未知设备";
+        return map;
     }
 }

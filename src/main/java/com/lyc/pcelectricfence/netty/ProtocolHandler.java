@@ -8,6 +8,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 /**
  * 类 ProtocolHandler
  *
@@ -19,6 +21,7 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
+        log.info("Received message: {}", msg);
         String[] parts = msg.trim().split(" ");
         switch (parts[0]) {
             case "A":
@@ -77,8 +80,8 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
     private void handleEventUpload(ChannelHandlerContext ctx, String[] parts) {
         // 事件上传，储存至influxDb
         String command = String.join(" ", parts);
-        String description = CommandParserUtil.parseEventUploadCommand(command);
-        log.info("Event Upload Command: {}", description);
+        Map<String, Object> map = CommandParserUtil.parseEventUploadCommand(command);
+        log.info("Event Upload Command: {}", map);
     }
 
     /**
@@ -90,8 +93,8 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
     private void handleControl(ChannelHandlerContext ctx, String[] parts) {
         // 处理控制 TODO
         String command = String.join(" ", parts);
-        String description = CommandParserUtil.parseControlCommand(command);
-        log.info("Control Command: {}", description);
+        Map<String, Object> map = CommandParserUtil.parseHostControlCommand(command);
+        log.info("Control Command: {}", map);
     }
 
     /**
@@ -103,7 +106,7 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
     private void handleOutputControl(ChannelHandlerContext ctx, String[] parts) {
         // 输出控制 TODO
         String command = String.join(" ", parts);
-        String description = CommandParserUtil.parseOutputControlCommand(command);
-        log.info("Output Control Command: {}", description);
+        Map<String, Object> map = CommandParserUtil.parseOutputControlCommand(command);
+        log.info("Output Control Command: {}", map);
     }
 }
