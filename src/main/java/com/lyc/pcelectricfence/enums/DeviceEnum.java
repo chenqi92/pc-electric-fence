@@ -13,7 +13,7 @@ public enum DeviceEnum {
     COMM_0_EXTENDED_1_64(0, "1-64", "扩展设备", "模块"),
 
     // 通讯机编号为1时的终端设备
-    COMM_1_MAIN_KEYBOARD(1, "128", "主键盘", "键盘"),
+    COMM_1_MAIN_KEYBOARD(1, "128", "主键盘", "键盘(即主键盘)"),
     COMM_1_SUB_KEYBOARD_129_160(1, "129-160", "分键盘", "键盘");
 
     private final int commNumber;

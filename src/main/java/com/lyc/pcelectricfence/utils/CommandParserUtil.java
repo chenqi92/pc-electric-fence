@@ -42,15 +42,22 @@ public class CommandParserUtil {
         map.put("host", parts[1]);
         // 主机编号
         String hostNumber = parts[1].split("-")[0];
-        map.put("hostNumber", hostNumber);
+        map.put("hostNumber", Integer.parseInt(hostNumber));
+        int controlType = Integer.parseInt(parts[1].split("-")[1]);
+        // 通讯机编号
+        map.put("communicationNumber", controlType);
+        String controlTypeName = controlType == 0 ? "设备" : "键盘";
         // 设备编号
-        String deviceNumber = parts[1].split("-")[2];
+        int deviceNumber = Integer.parseInt(parts[1].split("-")[2]);
+        if (deviceNumber == 128) {
+            controlTypeName = "键盘(即主键盘)";
+        }
         map.put("deviceNumber", deviceNumber);
         // 设备类型
         int deviceType = Integer.parseInt(parts[2]);
         map.put("deviceType", deviceType);
-        String deviceTypeName = deviceType == 0 ? "设备" : String.format("设备防区%d", deviceType);
-        map.put("deviceTypeName", deviceTypeName);
+        String deviceTypeName = deviceType == 0 ? "" : String.format("防区%d", deviceType);
+        map.put("deviceTypeName", deviceType == 0 ? "设备" : "防区");
         // 控制类型
         int controlAction = Integer.parseInt(parts[3]);
         map.put("controlAction", controlAction);
@@ -60,7 +67,7 @@ public class CommandParserUtil {
         String password = parts[4];
         map.put("password", password);
 
-        String event = String.format("控制%s号主机的%s号%s%s", hostNumber, deviceNumber, deviceTypeName, controlActionTrans);
+        String event = String.format("控制%s号主机的%s号%s%s%s", hostNumber, deviceNumber, controlTypeName, deviceTypeName, controlActionTrans);
         log.info("Host control event: {}", event);
         map.put("event", event);
         return map;
