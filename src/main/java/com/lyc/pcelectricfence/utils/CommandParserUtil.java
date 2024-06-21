@@ -10,6 +10,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.lyc.pcelectricfence.constant.CommonConstant.ALARM_DATETIME_PATTERN;
+import static com.lyc.pcelectricfence.constant.CommonConstant.NORM_DATETIME_PATTERN;
+
 /**
  * 类 CommandParserUtil
  *
@@ -200,9 +203,9 @@ public class CommandParserUtil {
             }
             LocalDateTime eventTime = LocalDateTime.of(year, Integer.parseInt(timeParts[0]), Integer.parseInt(timeParts[1]),
                     Integer.parseInt(timeParts[2]), Integer.parseInt(timeParts[3]));
-            map.put("eventTime", eventTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            map.put("eventTime", eventTime.format(DateTimeFormatter.ofPattern(NORM_DATETIME_PATTERN)));
 
-            String event = String.format("%s号主机的%s号%s%s在%s发生%s", hostNumber, deviceNumber, deviceEnum.getOutput(), zoneTypeName, eventTime.format(DateTimeFormatter.ofPattern("MM月dd日HH时mm分")), eventTypeName);
+            String event = String.format("%s号主机的%s号%s%s在%s发生%s", hostNumber, deviceNumber, deviceEnum.getOutput(), zoneTypeName, eventTime.format(DateTimeFormatter.ofPattern(ALARM_DATETIME_PATTERN)), eventTypeName);
             log.info("Event upload: {}", event);
             map.put("event", event);
 
