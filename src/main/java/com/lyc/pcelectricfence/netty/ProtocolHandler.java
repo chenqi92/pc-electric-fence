@@ -1,5 +1,6 @@
 package com.lyc.pcelectricfence.netty;
 
+import cn.allbs.influx.InfluxTemplate;
 import com.lyc.pcelectricfence.enums.CommunicationMode;
 import com.lyc.pcelectricfence.enums.DeviceType;
 import com.lyc.pcelectricfence.enums.ResponseType;
@@ -7,8 +8,13 @@ import com.lyc.pcelectricfence.utils.CommandParserUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.Map;
+
+import static com.lyc.pcelectricfence.constant.CommonConstant.INFLUXDB_DATABASE_MEASUREMENT;
 
 /**
  * 类 ProtocolHandler
@@ -17,7 +23,11 @@ import java.util.Map;
  * @date 2024/6/20
  */
 @Slf4j
+@Component
 public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
+
+    @Resource
+    private InfluxTemplate influxTemplate;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
@@ -81,7 +91,12 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
         // 事件上传，储存至influxDb
         String command = String.join(" ", parts);
         Map<String, Object> map = CommandParserUtil.parseEventUploadCommand(command);
-        log.info("Event Upload Command: {}", map);
+        log.debug("Event Upload Command: {}", map);
+        Map<String, String> tags = new HashMap<>();
+        tags.put("type", "E");
+        tags.put("typeName", "事件上传");
+        // 储存至influxDb
+        influxTemplate.insert(INFLUXDB_DATABASE_MEASUREMENT, tags, map);
     }
 
     /**
@@ -94,7 +109,12 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
         // 处理控制 TODO
         String command = String.join(" ", parts);
         Map<String, Object> map = CommandParserUtil.parseHostControlCommand(command);
-        log.info("Control Command: {}", map);
+        log.debug("Control Command: {}", map);
+        Map<String, String> tags = new HashMap<>();
+        tags.put("type", "C");
+        tags.put("typeName", "主机控制");
+        // 储存至influxDb
+        influxTemplate.insert(INFLUXDB_DATABASE_MEASUREMENT, tags, map);
     }
 
     /**
@@ -104,9 +124,14 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
      * @param parts 消息分割后的数组
      */
     private void handleOutputControl(ChannelHandlerContext ctx, String[] parts) {
-        // 输出控制 TODO
+        // 输出控制
         String command = String.join(" ", parts);
         Map<String, Object> map = CommandParserUtil.parseOutputControlCommand(command);
-        log.info("Output Control Command: {}", map);
+        log.debug("Output Control Command: {}", map);
+        // 储存至influxDb
+        Map<String, String> tags = new HashMap<>();
+        tags.put("type", "O");
+        tags.put("typeName", "输出点控制");
+        influxTemplate.insert(INFLUXDB_DATABASE_MEASUREMENT, tags, map);
     }
 }

@@ -1,5 +1,6 @@
 package com.lyc.pcelectricfence.netty;
 
+import cn.allbs.influx.InfluxTemplate;
 import com.lyc.pcelectricfence.properties.NettyServerProperties;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -12,6 +13,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -33,6 +35,9 @@ public class NettyServer {
 
     private NioEventLoopGroup bossGroup;
     private NioEventLoopGroup workerGroup;
+
+    @Resource
+    private ProtocolHandler protocolHandler;
 
     /**
      * Netty Server Channel
@@ -56,7 +61,7 @@ public class NettyServer {
                         protected void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(new StringDecoder());
                             ch.pipeline().addLast(new StringEncoder());
-                            ch.pipeline().addLast(new ProtocolHandler());
+                            ch.pipeline().addLast(protocolHandler);
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)
