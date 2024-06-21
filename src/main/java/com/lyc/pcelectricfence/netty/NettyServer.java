@@ -2,12 +2,12 @@ package com.lyc.pcelectricfence.netty;
 
 import com.lyc.pcelectricfence.properties.NettyServerProperties;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -41,6 +41,9 @@ public class NettyServer {
     @Resource
     private ProtocolHandler protocolHandler;
 
+    @Resource
+    private NettyServerHandlerInitializer nettyServerHandlerInitializer;
+
     /**
      * Netty Server Channel
      */
@@ -59,14 +62,7 @@ public class NettyServer {
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
                 .childOption(ChannelOption.TCP_NODELAY, true)
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel ch) {
-                        ch.pipeline().addLast(new StringDecoder());
-                        ch.pipeline().addLast(new StringEncoder());
-                        ch.pipeline().addLast(protocolHandler);
-                    }
-                });
+                .childHandler(nettyServerHandlerInitializer);
 
         // 绑定端口，并同步等待成功，即启动服务端
         ChannelFuture future = serverBootstrap.bind().sync();
