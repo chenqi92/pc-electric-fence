@@ -5,6 +5,7 @@ import com.lyc.pcelectricfence.enums.CommunicationMode;
 import com.lyc.pcelectricfence.enums.DeviceType;
 import com.lyc.pcelectricfence.enums.ResponseType;
 import com.lyc.pcelectricfence.utils.CommandParserUtil;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import static com.lyc.pcelectricfence.constant.CommonConstant.INFLUXDB_DATABASE_
  */
 @Slf4j
 @Component
+@ChannelHandler.Sharable
 public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
 
     @Resource
