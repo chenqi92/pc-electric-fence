@@ -1,9 +1,10 @@
 package com.lyc.pcelectricfence.netty;
 
-import com.lyc.pcelectricfence.constant.CommonConstant;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
@@ -11,8 +12,6 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,14 +45,6 @@ public class NettyServerHandlerInitializer extends ChannelInitializer<Channel> {
                 .addLast(new StringDecoder())
                 // 编码器
                 .addLast(new StringEncoder())
-                // 添加连接事件处理
-                .addLast(new ChannelInboundHandlerAdapter() {
-                    @Override
-                    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                        System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern(CommonConstant.NORM_DATETIME_PATTERN)) + " Client connected: " + ctx.channel().remoteAddress());
-                        super.channelActive(ctx);
-                    }
-                })
                 // 消息分发器
                 .addLast(protocolHandler);
         // @formatter:on
