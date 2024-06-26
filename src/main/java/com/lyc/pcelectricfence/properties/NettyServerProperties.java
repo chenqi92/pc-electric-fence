@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "netty.server")
+@ConfigurationProperties(prefix = "server")
 public class NettyServerProperties {
 
     /**
