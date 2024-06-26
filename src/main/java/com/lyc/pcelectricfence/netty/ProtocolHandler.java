@@ -55,6 +55,9 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
                 // Handle unknown command
                 break;
         }
+        // 发送回复消息
+        String responseMessage = "A 1\r\n";
+        ctx.writeAndFlush(responseMessage);
     }
 
     /**
