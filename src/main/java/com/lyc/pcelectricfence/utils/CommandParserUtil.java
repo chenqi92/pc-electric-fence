@@ -137,7 +137,36 @@ public class CommandParserUtil {
         Map<String, Object> map = new HashMap<>();
         String[] parts = command.split(" ");
         map.put("host", parts[1]);
-        if (parts.length == 5) {
+        if (parts.length == 4) {
+            // E 1-0-6 2 2
+            String[] hostParts = parts[1].split("-");
+            String hostNumber = hostParts[0];
+            map.put("hostNumber", Integer.parseInt(hostNumber));
+            // 通讯机编号
+            int communicationNumber = Integer.parseInt(hostParts[1]);
+            map.put("communicationNumber", communicationNumber);
+            // 设备编号
+            int deviceNumber = Integer.parseInt(hostParts[2]);
+            map.put("deviceNumber", deviceNumber);
+            DeviceEnum deviceEnum = DeviceEnum.fromCommAndTerminal(communicationNumber, deviceNumber);
+            map.put("zoneType", communicationNumber + "-" + deviceNumber);
+            map.put("zoneTypeName", deviceEnum.getDescription());
+
+            // 防区
+            int zoneNumber = Integer.parseInt(parts[2]);
+            map.put("zoneNumber", zoneNumber);
+            String zoneTypeName = zoneNumber > 0 ? zoneNumber + "防区" : "";
+
+            int eventType = Integer.parseInt(parts[3]);
+            map.put("eventType", eventType);
+
+            String eventTypeName = EventType.values()[eventType].getDescription();
+            map.put("eventTypeName", eventTypeName);
+
+            String event = String.format("%s号主机的%s号%s%s发生%s", hostNumber, deviceNumber, deviceEnum.getOutput(), zoneTypeName, eventTypeName);
+            log.info("Event upload: {}", event);
+            map.put("event", event);
+        }else if (parts.length == 5) {
             // E 0001 1 36 50
             int hostNumber = Integer.parseInt(parts[1]);
             map.put("hostNumber", hostNumber);
