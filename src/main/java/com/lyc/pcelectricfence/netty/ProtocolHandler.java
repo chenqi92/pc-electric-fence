@@ -8,6 +8,7 @@ import com.lyc.pcelectricfence.utils.CommandParserUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.ReadTimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -56,8 +57,7 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
                 break;
         }
         // 发送回复消息
-        String responseMessage = "A 1\r\n";
-        ctx.writeAndFlush(responseMessage);
+        ctx.writeAndFlush("A 1\r\n");
     }
 
     /**
@@ -70,7 +70,6 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
         int result = Integer.parseInt(parts[1]);
         ResponseType responseType = ResponseType.values()[result];
         log.info("Response: {}", responseType.getDescription());
-        ctx.writeAndFlush("A 1\r\n");
     }
 
     /**
@@ -138,5 +137,15 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
         tags.put("type", "O");
         tags.put("typeName", "输出点控制");
         influxTemplate.insert(INFLUXDB_DATABASE_MEASUREMENT, tags, map);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        if (cause instanceof ReadTimeoutException) {
+            log.info("Read timeout occurred. {}", ctx.channel());
+        } else {
+            log.info(cause.getLocalizedMessage());
+        }
+        ctx.close();
     }
 }
