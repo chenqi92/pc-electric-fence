@@ -69,7 +69,7 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
     private void handleResponse(ChannelHandlerContext ctx, String[] parts) {
         int result = Integer.parseInt(parts[1]);
         ResponseType responseType = ResponseType.values()[result];
-        log.info("Response: {}", responseType.getDescription());
+        log.debug("Response: {}", responseType.getDescription());
     }
 
     /**
@@ -82,7 +82,7 @@ public class ProtocolHandler extends SimpleChannelInboundHandler<String> {
         int deviceNumber = Integer.parseInt(parts[1]);
         CommunicationMode communicationMode = CommunicationMode.values()[Integer.parseInt(parts[2])];
         DeviceType deviceType = DeviceType.values()[Integer.parseInt(parts[3])];
-        log.info("Heartbeat - Device Number: {}, Communication Mode: {}, Device Type: {}", deviceNumber, communicationMode.getDescription(), deviceType.getDescription());
+        log.debug("Heartbeat - Device Number: {}, Communication Mode: {}, Device Type: {}", deviceNumber, communicationMode.getDescription(), deviceType.getDescription());
     }
 
     /**

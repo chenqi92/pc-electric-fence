@@ -83,6 +83,14 @@ public class NettyServer {
                         ch.pipeline().addLast(new StringDecoder());
                         // 跟编码器同理
                         ch.pipeline().addLast(new StringEncoder());
+                        // 添加连接事件处理
+                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                            @Override
+                            public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                log.info("{}远程客户端连接！", ctx.channel().remoteAddress());
+                                super.channelActive(ctx);
+                            }
+                        });
                         // 处理收到报文的方法
                         ch.pipeline().addLast(protocolHandler);
                     }
@@ -98,6 +106,7 @@ public class NettyServer {
 
     @PreDestroy
     public void stop() {
+        log.info("{} 服务主动断开连接!", channel.localAddress());
         // 关闭 Netty Server
         if (channel != null) {
             channel.close();
