@@ -1,0 +1,9 @@
+influx:
+  open_url: http://${PC_INFLUXDB_HOST_DEV:127.0.0.1}:${PC_INFLUXDB_PORT:8086}
+  username: ${INFLUX_USER:admin}
+  password: ${INFLUX_PWD:123456}
+  database: pc_prod
+  retention_policy: autogen
+  retention_policy_time: 0s
+  skip-error: false
+
